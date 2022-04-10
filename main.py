@@ -17,10 +17,11 @@ if __name__ == "__main__":
         opt=Option(phase="train")
     )
 
-    batch_1 = torch.rand(10, 3, 224, 224)
-    batch_2 = torch.rand(10, 3, 224, 224)
+    device = torch.device("cuda")
 
-    model = CycleGANModel()
+    dataloader = DataLoader(dataset, 2, shuffle=True)
 
-    model.save_model("./checkpoints", 1)
-    
+    model = CycleGANModel(device=device)
+
+    for i, data in enumerate(dataloader):
+        model.optimize_parameters(data['img_A'], data['img_B'])
