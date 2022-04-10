@@ -5,22 +5,25 @@ import torch
 from networks.discriminators import NLayerDiscriminator
 from networks.generators import ResnetGenerator
 from networks.loss_functions import GANLoss
-from torch import nn
+from torch import Tensor, nn
 
 
 class CycleGANModel:
 
-    def __init__(self, lr=0.001, lamda_A=10.0, lamda_B=10.0) -> None:
+    def __init__(self, lr=0.001, lamda_A=10.0, lamda_B=10.0, device=torch.device("cpu")) -> None:
+        print("Creating cycleGAN on: %s" % device)
+        self.device = device
+
         self.lambda_A = torch.tensor(lamda_A)
         self.lambda_B = torch.tensor(lamda_B)
 
-        self.G_X = ResnetGenerator(3, 3)
-        self.D_Y = NLayerDiscriminator(3)
+        self.G_X = ResnetGenerator(3, 3).to(self.device)
+        self.D_Y = NLayerDiscriminator(3).to(self.device)
 
-        self.F_Y = ResnetGenerator(3, 3)
-        self.D_X = NLayerDiscriminator(3)
+        self.F_Y = ResnetGenerator(3, 3).to(self.device)
+        self.D_X = NLayerDiscriminator(3).to(self.device)
 
-        self.criterionGAN = GANLoss()
+        self.criterionGAN = GANLoss().to(self.device)
         self.criterionCycle = nn.L1Loss()
 
         self.optimizer_G = torch.optim.Adam(itertools.chain(
@@ -29,12 +32,12 @@ class CycleGANModel:
         self.optimizer_D = torch.optim.Adam(itertools.chain(
             self.D_X.parameters(), self.D_Y.parameters()), lr=lr)
 
-    def forward(self, real_X, real_Y):
-        self.real_X = real_X
-        self.real_Y = real_Y
+    def forward(self, real_X: Tensor, real_Y: Tensor):
+        self.real_X = real_X.to(self.device)
+        self.real_Y = real_Y.to(self.device)
 
-        self.fake_Y = self.G_X(real_X)
-        self.fake_X = self.F_Y(real_Y)
+        self.fake_Y = self.G_X(self.real_X)
+        self.fake_X = self.F_Y(self.real_Y)
 
         self.reconstruc_X = self.F_Y(self.fake_Y)
         self.reconstruc_Y = self.G_X(self.fake_X)
@@ -112,3 +115,17 @@ class CycleGANModel:
         path = os.path.join(directory, filename)
 
         torch.save(network.state_dict(), path)
+
+    def load_model(self, directory):
+        self._load_model(self.G_X, "G_X", directory)
+        self._load_model(self.F_Y, "F_Y", directory)
+        self._load_model(self.D_X, "D_X", directory)
+        self._load_model(self.D_Y, "D_Y", directory)
+
+    def _load_model(self, network: torch.nn.Module, name, directory):
+        filename = "net_%s.pth" % name
+        path = os.path.join(directory, filename)
+
+        network.load_state_dict(torch.load(path, map_location=self.device))
+
+        network.to(self.device)
