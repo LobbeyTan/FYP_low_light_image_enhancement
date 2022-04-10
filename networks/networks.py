@@ -47,10 +47,10 @@ def getNormalizationLayer(normalization: Normalization, num_features):
         raise NotImplementedError("Normalization layer undefined")
 
 
-def getPaddingLayer(padding: Padding, size):
-    if padding == Padding.reflect:
+def getPaddingLayer(padding_type: Padding, size):
+    if padding_type == Padding.reflect:
         return nn.ReflectionPad2d(size)
-    elif padding == Padding.replicate:
+    elif padding_type == Padding.replicate:
         return nn.ReplicationPad2d(size)
     return None
 
@@ -76,11 +76,11 @@ class ConvLayer(nn.Module):
 
 class DeconvLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, activation=Activation.relu, normalization=Normalization.batch, inplaced=False, sloped=0.2,) -> None:
+    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, output_padding=0, activation=Activation.relu, normalization=Normalization.batch, inplaced=False, sloped=0.2,) -> None:
         super(DeconvLayer, self).__init__()
 
         self.layers = [nn.ConvTranspose2d(
-            in_ch, out_ch, kernels, stride, padding,
+            in_ch, out_ch, kernels, stride, padding, output_padding=output_padding
         )]
 
         if normalization != Normalization.none:
@@ -97,23 +97,23 @@ class DeconvLayer(nn.Module):
 
 class ResidualLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding=Padding.reflect):
+    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding_type=Padding.reflect):
         super(ResidualLayer, self).__init__()
 
         self.layers = []
 
         padw = 1
 
-        if padding != Padding.none and padding != Padding.zero:
-            self.layers += [getPaddingLayer(padding, padw)]
+        if padding_type != Padding.none and padding_type != Padding.zero:
+            self.layers += [getPaddingLayer(padding_type, padw)]
 
-        self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding ==
+        self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding_type ==
                                   Padding.zero else 0, normalization=normalization)]
 
-        if padding != Padding.none and padding != Padding.zero:
-            self.layers += [getPaddingLayer(padding, padw)]
+        if padding_type != Padding.none and padding_type != Padding.zero:
+            self.layers += [getPaddingLayer(padding_type, padw)]
 
-        self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding ==
+        self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding_type ==
                                   Padding.zero else 0, normalization=normalization)]
 
         self.model = nn.Sequential(*self.layers)
