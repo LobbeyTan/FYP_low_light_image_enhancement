@@ -101,7 +101,14 @@ class CycleGANModel:
         self._save_network(self.D_Y, "D_Y", directory, epoch)
 
     def _save_network(self, network: torch.nn.Module, name, directory, epoch):
-        filename = "%s/net_%s.pth" % (epoch, name)
+        directory = os.path.join(directory, "iter_%d" % epoch)
+
+        try:
+            os.mkdir(directory)
+        except:
+            pass
+
+        filename = "net_%s.pth" % name
         path = os.path.join(directory, filename)
 
         torch.save(network.state_dict(), path)
