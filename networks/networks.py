@@ -67,7 +67,6 @@ def initNetWeight(m: nn.Module, method: WeightInit, init_gain=0.02):
     name = m.__class__.__name__
 
     if method != WeightInit.none and hasattr(m, 'weight'):
-        print(name)
         if name.find('Conv') != -1 or name.find('Linear') != -1:
             if method == WeightInit.normal:
                 nn.init.normal_(m.weight.data, 0, init_gain)
