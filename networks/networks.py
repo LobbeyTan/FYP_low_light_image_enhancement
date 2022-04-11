@@ -23,6 +23,14 @@ class Padding(Enum):
     none = "none"
 
 
+class WeightInit(Enum):
+    normal = "normal"
+    xavier = "xavier"
+    kaiming = "kaiming"
+    orthogonal = "orthogonal"
+    none = "none"
+
+
 def getActivationLayer(activation: Activation, inplace=False, negative_slope=0.2):
     if activation == Activation.relu:
         return nn.ReLU(inplace)
@@ -55,9 +63,30 @@ def getPaddingLayer(padding_type: Padding, size):
     return None
 
 
+def initNetWeight(m: nn.Module, method: WeightInit, init_gain=0.02):
+    name = m.__class__.__name__
+
+    if method != WeightInit.none and hasattr(m, 'weight'):
+        print(name)
+        if name.find('Conv') != -1 or name.find('Linear') != -1:
+            if method == WeightInit.normal:
+                nn.init.normal_(m.weight.data, 0, init_gain)
+            elif method == WeightInit.xavier:
+                nn.init.xavier_normal_(m.weight.data, init_gain)
+            elif method == WeightInit.kaiming:
+                nn.init.kaiming_normal_(m.weight.data)
+            elif method == WeightInit.orthogonal:
+                nn.init.orthogonal_(m.weight.data, init_gain)
+            else:
+                raise NotImplementedError("Initialization method undefined")
+        elif name.find('BatchNorm2d') != -1:
+            nn.init.normal_(m.weight.data, 1, init_gain)
+            nn.init.constant_(m.bias.data, 0.0)
+
+
 class ConvLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, activation=Activation.relu, normalization=Normalization.batch, inplaced=False, sloped=0.2,):
+    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02):
         super(ConvLayer, self).__init__()
 
         self.layers = [nn.Conv2d(in_ch, out_ch, kernels, stride, padding)]
@@ -70,13 +99,15 @@ class ConvLayer(nn.Module):
 
         self.model = nn.Sequential(*self.layers)
 
+        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
+
     def forward(self, x):
         return self.model(x)
 
 
 class DeconvLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, output_padding=0, activation=Activation.relu, normalization=Normalization.batch, inplaced=False, sloped=0.2,) -> None:
+    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, output_padding=0, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02) -> None:
         super(DeconvLayer, self).__init__()
 
         self.layers = [nn.ConvTranspose2d(
@@ -91,13 +122,15 @@ class DeconvLayer(nn.Module):
 
         self.model = nn.Sequential(*self.layers)
 
+        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
+
     def forward(self, x):
         return self.model(x)
 
 
 class ResidualLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding_type=Padding.reflect):
+    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding_type=Padding.reflect, init_method=WeightInit.normal, init_gain=0.02):
         super(ResidualLayer, self).__init__()
 
         self.layers = []
@@ -117,6 +150,8 @@ class ResidualLayer(nn.Module):
                                   Padding.zero else 0, normalization=normalization)]
 
         self.model = nn.Sequential(*self.layers)
+
+        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
     def forward(self, x):
         return self.model(x) + x
