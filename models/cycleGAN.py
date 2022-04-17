@@ -10,12 +10,13 @@ from torch import Tensor, nn
 
 class CycleGANModel:
 
-    def __init__(self, lr=0.001, lamda_A=10.0, lamda_B=10.0, device=torch.device("cpu")) -> None:
+    def __init__(self, lr=0.001, lamda_A=10.0, lamda_B=10.0, lambda_idt=0.5, device=torch.device("cpu")) -> None:
         print("Creating cycleGAN on: %s" % device)
         self.device = device
 
         self.lambda_A = torch.tensor(lamda_A)
         self.lambda_B = torch.tensor(lamda_B)
+        self.lambda_idt = torch.tensor(lambda_idt)
 
         self.G_X = ResnetGenerator(3, 3).to(self.device)
         self.D_Y = NLayerDiscriminator(3).to(self.device)
@@ -25,12 +26,15 @@ class CycleGANModel:
 
         self.criterionGAN = GANLoss().to(self.device)
         self.criterionCycle = nn.L1Loss()
+        self.criterionIdt = nn.L1Loss()
 
         self.optimizer_G = torch.optim.Adam(itertools.chain(
-            self.G_X.parameters(), self.F_Y.parameters()), lr=lr)
+            self.G_X.parameters(), self.F_Y.parameters()), lr=lr,
+        )
 
         self.optimizer_D = torch.optim.Adam(itertools.chain(
-            self.D_X.parameters(), self.D_Y.parameters()), lr=lr)
+            self.D_X.parameters(), self.D_Y.parameters()), lr=lr,
+        )
 
     def forward(self, real_X: Tensor, real_Y: Tensor):
         self.real_X = real_X.to(self.device)
@@ -62,6 +66,11 @@ class CycleGANModel:
 
     def backward_G(self):
 
+        self.loss_idt_A = self.criterionIdt(
+            self.G_X(self.real_Y), self.real_Y) * self.lambda_B * self.lambda_idt
+        self.loss_idt_B = self.criterionIdt(
+            self.F_Y(self.real_X), self.real_X) * self.lambda_A * self.lambda_idt
+
         self.loss_G_X = self.criterionGAN(self.D_Y(self.fake_Y), is_real=True)
         self.loss_F_Y = self.criterionGAN(self.D_X(self.fake_X), is_real=True)
 
@@ -72,7 +81,7 @@ class CycleGANModel:
             self.reconstruc_Y, self.real_Y) * self.lambda_B
 
         self.loss_G = self.loss_G_X + self.loss_F_Y + \
-            self.loss_cycle_X + self.loss_cycle_Y
+            self.loss_cycle_X + self.loss_cycle_Y + self.loss_idt_A + self.loss_idt_A
 
         self.loss_G.backward()
 
