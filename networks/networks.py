@@ -46,7 +46,7 @@ def getActivationLayer(activation: Activation, inplace=False, negative_slope=0.2
 
 def getNormalizationLayer(normalization: Normalization, num_features):
     if normalization == Normalization.batch:
-        return nn.BatchNorm2d(num_features)
+        return nn.BatchNorm2d(num_features, affine=True, track_running_stats=True)
     elif normalization == Normalization.instance:
         return nn.InstanceNorm2d(num_features)
     elif normalization == Normalization.none:
@@ -85,10 +85,11 @@ def initNetWeight(m: nn.Module, method: WeightInit, init_gain=0.02):
 
 class ConvLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02):
+    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, use_bias=False, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02):
         super(ConvLayer, self).__init__()
 
-        self.layers = [nn.Conv2d(in_ch, out_ch, kernels, stride, padding)]
+        self.layers = [
+            nn.Conv2d(in_ch, out_ch, kernels, stride, padding, bias=use_bias)]
 
         if normalization != Normalization.none:
             self.layers += [getNormalizationLayer(normalization, out_ch)]
@@ -106,11 +107,11 @@ class ConvLayer(nn.Module):
 
 class DeconvLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, output_padding=0, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02) -> None:
+    def __init__(self, in_ch, out_ch, kernels, stride, padding=0, output_padding=0, use_bias=False, inplaced=False, sloped=0.2, activation=Activation.relu, normalization=Normalization.batch, init_method=WeightInit.normal, init_gain=0.02) -> None:
         super(DeconvLayer, self).__init__()
 
         self.layers = [nn.ConvTranspose2d(
-            in_ch, out_ch, kernels, stride, padding, output_padding=output_padding
+            in_ch, out_ch, kernels, stride, padding, output_padding=output_padding, bias=use_bias
         )]
 
         if normalization != Normalization.none:
@@ -129,7 +130,7 @@ class DeconvLayer(nn.Module):
 
 class ResidualLayer(nn.Module):
 
-    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding_type=Padding.reflect, init_method=WeightInit.normal, init_gain=0.02):
+    def __init__(self, in_ch, out_ch, kernels, stride, normalization=Normalization.batch, padding_type=Padding.reflect, init_method=WeightInit.normal, init_gain=0.02, use_bias=False, inplace=False):
         super(ResidualLayer, self).__init__()
 
         self.layers = []
@@ -140,17 +141,15 @@ class ResidualLayer(nn.Module):
             self.layers += [getPaddingLayer(padding_type, padw)]
 
         self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding_type ==
-                                  Padding.zero else 0, normalization=normalization)]
+                                  Padding.zero else 0, normalization=normalization, use_bias=use_bias, inplaced=inplace)]
 
         if padding_type != Padding.none and padding_type != Padding.zero:
             self.layers += [getPaddingLayer(padding_type, padw)]
 
         self.layers += [ConvLayer(in_ch, out_ch, kernels, stride, padw if padding_type ==
-                                  Padding.zero else 0, normalization=normalization)]
+                                  Padding.zero else 0, normalization=normalization, use_bias=use_bias, inplaced=inplace)]
 
         self.model = nn.Sequential(*self.layers)
-
-        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
     def forward(self, x):
         return self.model(x) + x
