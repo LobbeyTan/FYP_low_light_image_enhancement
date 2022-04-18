@@ -10,10 +10,12 @@ from networks.generators import ResnetGenerator
 from networks.loss_functions import GANLoss
 from torch import Tensor, nn
 
+from networks.networks import Normalization
+
 
 class CycleGANModel:
 
-    def __init__(self, lr=0.001, gan_mode="lsgan",lamda_A=10.0, lamda_B=10.0, lambda_idt=0.5, n_blocks=9, device=torch.device("cpu")) -> None:
+    def __init__(self, lr=0.001, beta1=0.5, gan_mode="lsgan", lamda_A=10.0, lamda_B=10.0, lambda_idt=0.5, n_blocks=9, normalization=Normalization.instance, device=torch.device("cpu"),) -> None:
         print("Creating cycleGAN on: %s" % device)
         self.device = device
 
@@ -21,10 +23,14 @@ class CycleGANModel:
         self.lambda_B = torch.tensor(lamda_B)
         self.lambda_idt = torch.tensor(lambda_idt)
 
-        self.G_X = ResnetGenerator(3, 3, n_blocks=n_blocks).to(self.device)
+        self.G_X = ResnetGenerator(
+            3, 3, n_blocks=n_blocks, normalization=normalization).to(self.device)
+
         self.D_Y = NLayerDiscriminator(3).to(self.device)
 
-        self.F_Y = ResnetGenerator(3, 3, n_blocks=n_blocks).to(self.device)
+        self.F_Y = ResnetGenerator(
+            3, 3, n_blocks=n_blocks, normalization=normalization).to(self.device)
+
         self.D_X = NLayerDiscriminator(3).to(self.device)
 
         self.criterionGAN = GANLoss(gan_mode).to(self.device)
@@ -32,11 +38,11 @@ class CycleGANModel:
         self.criterionIdt = nn.L1Loss()
 
         self.optimizer_G = torch.optim.Adam(itertools.chain(
-            self.G_X.parameters(), self.F_Y.parameters()), lr=lr,
+            self.G_X.parameters(), self.F_Y.parameters()), lr=lr, betas=(beta1, 0.999)
         )
 
         self.optimizer_D = torch.optim.Adam(itertools.chain(
-            self.D_X.parameters(), self.D_Y.parameters()), lr=lr,
+            self.D_X.parameters(), self.D_Y.parameters()), lr=lr, betas=(beta1, 0.999)
         )
 
     def forward(self, real_X: Tensor, real_Y: Tensor):
