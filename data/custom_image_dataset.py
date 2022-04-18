@@ -1,4 +1,5 @@
 import os
+from random import randint
 from torch.utils.data import Dataset
 import torchvision.transforms as transforms
 from PIL import Image
@@ -20,10 +21,14 @@ class CustomImageDataset(Dataset):
         self.size_B = len(self.imgs_B)
 
         self.transform = transforms.Compose(
-            [transforms.ToTensor(),
-             transforms.Normalize((0.485, 0.456, 0.406),
-                                  (0.229, 0.224, 0.225)),
-             ]
+            [
+                transforms.Resize(
+                    size=286, interpolation=transforms.InterpolationMode.BICUBIC),
+                transforms.RandomCrop(size=256),
+                transforms.ToTensor(),
+                transforms.Normalize((0.485, 0.456, 0.406),
+                                     (0.229, 0.224, 0.225)),
+            ]
         )
 
     def extractImages(self, dir):
@@ -46,7 +51,7 @@ class CustomImageDataset(Dataset):
     def __getitem__(self, index: int):
 
         idx_A = index % self.size_A
-        idx_B = index % self.size_B
+        idx_B = randint(0, self.size_B - 1)
 
         img_A = self.imgs_A[idx_A]
         img_B = self.imgs_B[idx_B]
