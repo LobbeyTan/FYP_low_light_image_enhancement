@@ -13,7 +13,7 @@ from torch import Tensor, nn
 
 class CycleGANModel:
 
-    def __init__(self, lr=0.001, lamda_A=10.0, lamda_B=10.0, lambda_idt=0.5, n_blocks=9, device=torch.device("cpu")) -> None:
+    def __init__(self, lr=0.001, gan_mode="lsgan",lamda_A=10.0, lamda_B=10.0, lambda_idt=0.5, n_blocks=9, device=torch.device("cpu")) -> None:
         print("Creating cycleGAN on: %s" % device)
         self.device = device
 
@@ -27,7 +27,7 @@ class CycleGANModel:
         self.F_Y = ResnetGenerator(3, 3, n_blocks=n_blocks).to(self.device)
         self.D_X = NLayerDiscriminator(3).to(self.device)
 
-        self.criterionGAN = GANLoss().to(self.device)
+        self.criterionGAN = GANLoss(gan_mode).to(self.device)
         self.criterionCycle = nn.L1Loss()
         self.criterionIdt = nn.L1Loss()
 
