@@ -166,9 +166,9 @@ class CycleGANModel:
 
     def save_result(self, save_dir):
         paths = []
-        inverse_transform = transforms.Compose([transforms.Normalize([0., 0., 0.], [1/0.229, 1/0.224, 1/0.225]),
+        inverse_transform = transforms.Compose([transforms.Normalize([0., 0., 0.], [1/0.5, 1/0.5, 1/0.5]),
                                                 transforms.Normalize(
-                                                    [-0.485, -0.456, -0.406], [1., 1., 1.]),
+                                                    [-0.5, -0.5, -0.5], [1., 1., 1.]),
                                                 transforms.ToPILImage()
                                                 ])
 
