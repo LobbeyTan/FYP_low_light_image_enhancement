@@ -1,8 +1,8 @@
 import os
 from random import randint
 import torch
-from torch import nn
-
+from torch import Tensor, nn
+from torchvision import transforms
 from models.vgg import load_vgg16
 from networks.discriminators import NLayerDiscriminator
 from networks.generators import UnetGenerator
@@ -195,10 +195,10 @@ class EnlightenGAN(nn.Module):
         self._save_network(self.patch_D, "patch_D", directory, epoch)
 
     def _save_network(self, network: torch.nn.Module, name, directory, epoch):
-        directory = os.path.join(directory, "iter_%d" % epoch)
+        directory = os.path.join(directory, "iter_%s/" % epoch)
 
         try:
-            os.mkdir(directory)
+            os.makedirs(directory)
         except:
             pass
 
@@ -206,3 +206,55 @@ class EnlightenGAN(nn.Module):
         path = os.path.join(directory, filename)
 
         torch.save(network.state_dict(), path)
+
+    def load_model(self, directory):
+        self._load_model(self.G, "G", directory)
+        self._load_model(self.D, "D", directory)
+        self._load_model(self.patch_D, "patch_D", directory)
+
+    def _load_model(self, network: torch.nn.Module, name, directory):
+        filename = "net_%s.pth" % name
+        path = os.path.join(directory, filename)
+
+        network.load_state_dict(torch.load(path, map_location=self.device))
+
+        network.to(self.device)
+
+    def eval(self):
+        self.G.eval()
+        self.D.eval()
+        self.patch_D.eval()
+
+    def test(self, save_dir: str):
+        with torch.no_grad():
+            self.forward()
+            return self.save_result(save_dir)
+
+    def save_result(self, save_dir):
+        paths = []
+        inverse_transform = transforms.Compose([transforms.Normalize([0., 0., 0.], [1/0.5, 1/0.5, 1/0.5]),
+                                                transforms.Normalize(
+                                                    [-0.5, -0.5, -0.5], [1., 1., 1.]),
+                                                transforms.ToPILImage()
+                                                ])
+
+        def save(result: Tensor, name: str, result_dir: str):
+            img = inverse_transform(result)
+            path = os.path.join(result_dir, f"{name}.jpg")
+            img.save(path, "JPEG")
+            paths.append((path, name))
+
+        batch_size = self.real_X.shape[0]
+
+        for i in range(batch_size):
+
+            result_dir = os.path.join(save_dir, f"output_{i+1}")
+
+            if not os.path.isdir(result_dir):
+                os.makedirs(result_dir)
+
+            save(self.input_A[i], "Real X", result_dir)
+            save(self.input_B[i], "Real Y", result_dir)
+            save(self.fake_B[i], "Fake Y", result_dir)
+
+        return paths

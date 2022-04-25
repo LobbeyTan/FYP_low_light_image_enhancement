@@ -24,3 +24,5 @@ if __name__ == "__main__":
         A_gray = torch.unsqueeze(A_gray, 0).reshape(1, 1, 256, 256)
     
     G = EnlightenGAN()
+
+    G.save_model("./checkpoints/enlightenGAN/", epoch="train")

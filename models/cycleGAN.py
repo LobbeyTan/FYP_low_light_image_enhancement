@@ -127,10 +127,10 @@ class CycleGANModel:
         self._save_network(self.D_Y, "D_Y", directory, epoch)
 
     def _save_network(self, network: torch.nn.Module, name, directory, epoch):
-        directory = os.path.join(directory, "iter_%d" % epoch)
+        directory = os.path.join(directory, "iter_%s/" % epoch)
 
         try:
-            os.mkdir(directory)
+            os.makedirs(directory)
         except:
             pass
 
@@ -172,20 +172,26 @@ class CycleGANModel:
                                                 transforms.ToPILImage()
                                                 ])
 
-        if not os.path.isdir(save_dir):
-            os.mkdir(save_dir)
-
-        def save(result: Tensor, name: str):
-            img = inverse_transform(result[0])
-            path = os.path.join(save_dir, f"{name}.jpg")
+        def save(result: Tensor, name: str, result_dir: str):
+            img = inverse_transform(result)
+            path = os.path.join(result_dir, f"{name}.jpg")
             img.save(path, "JPEG")
             paths.append((path, name))
 
-        save(self.real_X, "Real X")
-        save(self.real_Y, "Real Y")
-        save(self.fake_X, "Fake X")
-        save(self.fake_Y, "Fake Y")
-        save(self.reconstruc_X, "Reconstruct X")
-        save(self.reconstruc_Y, "Reconstruct Y")
+        batch_size = self.real_X.shape[0]
+
+        for i in range(batch_size):
+
+            result_dir = os.path.join(save_dir, f"output_{i+1}")
+
+            if not os.path.isdir(result_dir):
+                os.makedirs(result_dir)
+
+            save(self.real_X[i], "Real X", result_dir)
+            save(self.real_Y[i], "Real Y", result_dir)
+            save(self.fake_X[i], "Fake X", result_dir)
+            save(self.fake_Y[i], "Fake Y", result_dir)
+            save(self.reconstruc_X[i], "Reconstruct X", result_dir)
+            save(self.reconstruc_Y[i], "Reconstruct Y", result_dir)
 
         return paths
