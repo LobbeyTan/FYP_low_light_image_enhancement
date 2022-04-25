@@ -1,5 +1,6 @@
 from enum import Enum
 from torch import nn
+import torch
 
 
 class Activation(Enum):
@@ -153,3 +154,75 @@ class ResidualLayer(nn.Module):
 
     def forward(self, x):
         return self.model(x) + x
+
+
+class DownConvBlock(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super(DownConvBlock, self).__init__()
+
+        self.layers = [
+            # First conv block
+            nn.Conv2d(in_ch, out_ch, kernel_size=(3, 3), stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(out_ch),
+            # Second conv block
+            nn.Conv2d(out_ch, out_ch, kernel_size=(3, 3), stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(out_ch),
+        ]
+
+        # Max pooling (downsampling)
+        self.downsampling = nn.MaxPool2d(kernel_size=(2, 2), stride=2)
+
+        self.model = nn.Sequential(*self.layers)
+
+    def forward(self, x):
+        out = self.model(x)
+        return out, self.downsampling(out)
+
+
+class UpConvBlock(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super(UpConvBlock, self).__init__()
+        self.layers = [
+            # First conv block
+            nn.Conv2d(in_ch, out_ch, kernel_size=(3, 3), stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(out_ch),
+            # Second conv block
+            nn.Conv2d(out_ch, out_ch, kernel_size=(3, 3), stride=1, padding=1),
+            nn.LeakyReLU(),
+            nn.BatchNorm2d(out_ch),
+        ]
+
+        self.deconv = nn.Conv2d(in_ch, out_ch, 3, padding=1)
+
+        # Bilinear 2D upsampling
+        self.upsampling = nn.UpsamplingBilinear2d(scale_factor=2)
+
+        self.model = nn.Sequential(*self.layers)
+
+    def forward(self, x, skip_connection):
+        _x = self.upsampling(x)
+        up = torch.cat([self.deconv(_x), skip_connection], dim=1)
+        out = self.model(up)
+
+        return out
+
+
+class UnetSkipConnectionBlock(nn.Module):
+
+    def __init__(self, in_ch: int, out_ch: int, outer_module: nn.Module):
+
+        super(UnetSkipConnectionBlock, self).__init__()
+
+        self.layers = [
+            DownConvBlock(in_ch, out_ch),
+            outer_module,
+            UpConvBlock(out_ch * 2, in_ch),
+        ]
+
+        self.model = nn.Sequential(*self.layers)
+
+    def forward(self, x):
+        return torch.cat([x, self.model(x)], 1)

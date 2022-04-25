@@ -6,11 +6,11 @@ from networks.networks import Activation, ConvLayer, Normalization
 
 class NLayerDiscriminator(nn.Module):
 
-    def __init__(self, in_ch, cf=64, n_layers=3, normalization=Normalization.batch) -> None:
+    def __init__(self, in_ch, cf=64, n_layers=3, padw=1, normalization=Normalization.batch) -> None:
         super(NLayerDiscriminator, self).__init__()
 
         kw = 4
-        padw = 1
+        padw = padw
 
         # Input layers
         self.layers = [ConvLayer(in_ch, cf, kernels=kw, stride=2, padding=padw,

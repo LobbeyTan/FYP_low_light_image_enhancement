@@ -1,8 +1,8 @@
-from turtle import forward
-from numpy import pad
+import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
-from networks.networks import Activation, ConvLayer, DeconvLayer, Normalization, Padding, ResidualLayer, getPaddingLayer
+from networks.networks import Activation, ConvLayer, DeconvLayer, DownConvBlock, Normalization, Padding, ResidualLayer, UnetSkipConnectionBlock, UpConvBlock, getPaddingLayer
 
 
 class ResnetGenerator(nn.Module):
@@ -55,3 +55,64 @@ class ResnetGenerator(nn.Module):
 
     def forward(self, x):
         return self.model(x)
+
+
+class UnetGenerator(nn.Module):
+
+    def __init__(self) -> None:
+        super(UnetGenerator, self).__init__()
+
+        self.downsampling1 = nn.MaxPool2d(2)
+        self.downsampling2 = nn.MaxPool2d(2)
+        self.downsampling3 = nn.MaxPool2d(2)
+        self.downsampling4 = nn.MaxPool2d(2)
+
+        self.down1 = DownConvBlock(4, 32)
+        self.down2 = DownConvBlock(32, 64)
+        self.down3 = DownConvBlock(64, 128)
+        self.down4 = DownConvBlock(128, 256)
+
+        self.conv1 = ConvLayer(256, 512, 3, 1, 1,
+                               activation=Activation.leaky_relu)
+        self.conv2 = ConvLayer(512, 512, 3, 1, 1,
+                               activation=Activation.leaky_relu)
+
+        self.up1 = UpConvBlock(512, 256)
+        self.up2 = UpConvBlock(256, 128)
+        self.up3 = UpConvBlock(128, 64)
+        self.up4 = UpConvBlock(64, 32)
+
+        self.conv3 = ConvLayer(32, 3, 3, 1, 1,
+                               activation=Activation.tanh,
+                               normalization=Normalization.none,
+                               )
+
+    def forward(self, x_in: torch.Tensor, gray: torch.Tensor):
+        gray1 = gray
+        gray2 = self.downsampling1(gray1)
+        gray3 = self.downsampling1(gray2)
+        gray4 = self.downsampling1(gray3)
+        gray5 = self.downsampling1(gray4)
+
+        x1, x = self.down1(torch.cat([x_in, gray], dim=1))
+        x2, x = self.down2(x)
+        x3, x = self.down3(x)
+        x4, x = self.down4(x)
+        x5 = self.conv2(self.conv1(x) * gray5)
+
+        x6 = self.up1(x5, x4 * gray4)
+        x7 = self.up2(x6, x3 * gray3)
+        x8 = self.up3(x7, x2 * gray2)
+        x9 = self.up4(x8, x1 * gray1)
+
+        x10 = self.conv3(x9)
+
+        latent = x10 * gray1
+
+        latent = F.relu(latent)
+
+        x_in = (x_in - torch.min(x_in)) / (torch.max(x_in) - torch.min(x_in))
+
+        output = latent + x_in
+
+        return output, latent
