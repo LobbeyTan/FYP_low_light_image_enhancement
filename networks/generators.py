@@ -91,9 +91,9 @@ class UnetGenerator(nn.Module):
     def forward(self, x_in: torch.Tensor, gray: torch.Tensor):
         gray1 = gray
         gray2 = self.downsampling1(gray1)
-        gray3 = self.downsampling1(gray2)
-        gray4 = self.downsampling1(gray3)
-        gray5 = self.downsampling1(gray4)
+        gray3 = self.downsampling2(gray2)
+        gray4 = self.downsampling3(gray3)
+        gray5 = self.downsampling4(gray4)
 
         x1, x = self.down1(torch.cat([x_in, gray], dim=1))
         x2, x = self.down2(x)
