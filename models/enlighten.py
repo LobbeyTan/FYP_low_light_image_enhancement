@@ -1,6 +1,8 @@
 import os
 from random import randint
+import numpy as np
 import torch
+from PIL import Image
 from torch import Tensor, nn
 from torchvision import transforms
 from models.vgg import load_vgg16
@@ -227,24 +229,21 @@ class EnlightenGAN(nn.Module):
 
     def test(self, save_dir: str):
         with torch.no_grad():
-            self.forward()
+            self.fake_B, self.latent_real_A = self.G(
+                self.input_A, self.input_A_gray
+            )
             return self.save_result(save_dir)
 
     def save_result(self, save_dir):
         paths = []
-        inverse_transform = transforms.Compose([transforms.Normalize([0., 0., 0.], [1/0.5, 1/0.5, 1/0.5]),
-                                                transforms.Normalize(
-                                                    [-0.5, -0.5, -0.5], [1., 1., 1.]),
-                                                transforms.ToPILImage()
-                                                ])
 
-        def save(result: Tensor, name: str, result_dir: str):
-            img = inverse_transform(result)
+        def save(result: np.uint8, name: str, result_dir: str):
+            img = Image.fromarray(result)
             path = os.path.join(result_dir, f"{name}.jpg")
-            img.save(path, "JPEG")
+            img.save(path)
             paths.append((path, name))
 
-        batch_size = self.real_X.shape[0]
+        batch_size = self.input_A.shape[0]
 
         for i in range(batch_size):
 
@@ -253,8 +252,45 @@ class EnlightenGAN(nn.Module):
             if not os.path.isdir(result_dir):
                 os.makedirs(result_dir)
 
-            save(self.input_A[i], "Real X", result_dir)
-            save(self.input_B[i], "Real Y", result_dir)
-            save(self.fake_B[i], "Fake Y", result_dir)
+            save(tensor2im(self.input_A[i].unsqueeze(0)),
+                 "Real X", result_dir)
+
+            save(atten2im(self.input_A_gray[i].unsqueeze(0)),
+                 "Gray X", result_dir)
+
+            save(latent2im(self.latent_real_A[i].unsqueeze(0)),
+                 "Latent X", result_dir)
+
+            save(tensor2im(self.fake_B[i].unsqueeze(0)),
+                 "Fake Y", result_dir)
+
+            save(tensor2im(self.input_B[i].unsqueeze(0)),
+                 "Real Y", result_dir)
 
         return paths
+
+
+def tensor2im(image_tensor, imtype=np.uint8):
+    image_numpy = image_tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
+    image_numpy = np.maximum(image_numpy, 0)
+    image_numpy = np.minimum(image_numpy, 255)
+    return image_numpy.astype(imtype)
+
+
+def atten2im(image_tensor, imtype=np.uint8):
+    image_tensor = image_tensor[0]
+    image_tensor = torch.cat((image_tensor, image_tensor, image_tensor), 0)
+    image_numpy = image_tensor.cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0))) * 255.0
+    image_numpy = image_numpy/(image_numpy.max()/255.0)
+    return image_numpy.astype(imtype)
+
+
+def latent2im(image_tensor, imtype=np.uint8):
+    # image_tensor = (image_tensor - torch.min(image_tensor))/(torch.max(image_tensor)-torch.min(image_tensor))
+    image_numpy = image_tensor[0].cpu().float().numpy()
+    image_numpy = (np.transpose(image_numpy, (1, 2, 0))) * 255.0
+    image_numpy = np.maximum(image_numpy, 0)
+    image_numpy = np.minimum(image_numpy, 255)
+    return image_numpy.astype(imtype)

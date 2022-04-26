@@ -83,9 +83,10 @@ class UnetGenerator(nn.Module):
         self.up4 = UpConvBlock(64, 32)
 
         self.conv3 = ConvLayer(32, 3, 3, 1, 1,
-                               activation=Activation.tanh,
+                               activation=Activation.none,
                                normalization=Normalization.none,
                                )
+        self.tanh = nn.Tanh()
 
     def forward(self, x_in: torch.Tensor, gray: torch.Tensor):
         gray1 = gray
@@ -107,11 +108,11 @@ class UnetGenerator(nn.Module):
 
         x10 = self.conv3(x9)
 
-        latent = x10 * gray1
+        latent = self.tanh(x10 * gray1)
 
         latent = F.relu(latent)
 
-        x_in = (x_in - torch.min(x_in)) / (torch.max(x_in) - torch.min(x_in))
+        # x_in = (x_in - torch.min(x_in)) / (torch.max(x_in) - torch.min(x_in))
 
         output = latent + x_in
 
