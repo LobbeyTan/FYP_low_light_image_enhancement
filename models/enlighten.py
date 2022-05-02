@@ -10,11 +10,12 @@ from networks.discriminators import NLayerDiscriminator
 from networks.generators import UnetGenerator
 from networks.loss_functions import GANLoss, SelfFeaturePreservingLoss
 from networks.networks import Normalization
+from networks.source import Unet_resize_conv
 
 
 class EnlightenGAN(nn.Module):
 
-    def __init__(self, use_ragan=True, n_patch=5, patch_size=32, lr=0.001, beta1=0.5, device=torch.device("cpu")) -> None:
+    def __init__(self, use_src=False, use_ragan=True, n_patch=5, patch_size=32, lr=0.001, beta1=0.5, device=torch.device("cpu")) -> None:
         super(EnlightenGAN, self).__init__()
 
         self.lr = lr
@@ -28,7 +29,8 @@ class EnlightenGAN(nn.Module):
         for param in self.vgg.parameters():
             param.requires_grad_(False)
 
-        self.G = UnetGenerator().to(self.device)
+        self.G = UnetGenerator().to(self.device)\
+            if not use_src else Unet_resize_conv().to(self.device)
 
         self.D = NLayerDiscriminator(
             3, n_layers=5, normalization=Normalization.none,
