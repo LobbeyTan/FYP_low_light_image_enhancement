@@ -9,13 +9,25 @@ from models.vgg import load_vgg16
 from networks.discriminators import NLayerDiscriminator
 from networks.generators import UnetGenerator
 from networks.loss_functions import GANLoss, SelfFeaturePreservingLoss
-from networks.networks import Normalization
+from networks.networks import Normalization, WeightInit, initNetWeight
 from networks.source import Unet_resize_conv
 
 
 class EnlightenGAN(nn.Module):
 
-    def __init__(self, use_src=False, use_ragan=True, n_patch=5, patch_size=32, lr=0.001, beta1=0.5, device=torch.device("cpu")) -> None:
+    def __init__(
+            self,
+            use_src=False,
+            use_ragan=True,
+            n_patch=5,
+            patch_size=32,
+            lr=0.001,
+            beta1=0.5,
+            parallelism=False,
+            device=torch.device("cpu"),
+            init_method=WeightInit.normal,
+            init_gain=0.02,
+    ) -> None:
         super(EnlightenGAN, self).__init__()
 
         self.lr = lr
@@ -31,6 +43,11 @@ class EnlightenGAN(nn.Module):
 
         self.G = UnetGenerator().to(self.device)\
             if not use_src else Unet_resize_conv().to(self.device)
+
+        self.G.apply(lambda m: initNetWeight(m, init_method, init_gain))
+
+        if parallelism:
+            self.G = torch.nn.DataParallel(self.G, [0])
 
         self.D = NLayerDiscriminator(
             3, n_layers=5, normalization=Normalization.none,

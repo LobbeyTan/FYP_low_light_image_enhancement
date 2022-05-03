@@ -157,7 +157,7 @@ class ResidualLayer(nn.Module):
 
 
 class DownConvBlock(nn.Module):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch, init_method=WeightInit.normal, init_gain=0.02):
         super(DownConvBlock, self).__init__()
 
         self.layers = [
@@ -176,13 +176,15 @@ class DownConvBlock(nn.Module):
 
         self.model = nn.Sequential(*self.layers)
 
+        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
+
     def forward(self, x):
         out = self.model(x)
         return out, self.downsampling(out)
 
 
 class UpConvBlock(nn.Module):
-    def __init__(self, in_ch, out_ch):
+    def __init__(self, in_ch, out_ch, init_method=WeightInit.normal, init_gain=0.02):
         super(UpConvBlock, self).__init__()
         self.layers = [
             # First conv block
@@ -201,6 +203,8 @@ class UpConvBlock(nn.Module):
         self.upsampling = nn.UpsamplingBilinear2d(scale_factor=2)
 
         self.model = nn.Sequential(*self.layers)
+
+        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
     def forward(self, x, skip_connection):
         _x = self.upsampling(x)
