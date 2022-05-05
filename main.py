@@ -25,4 +25,4 @@ if __name__ == "__main__":
     
     G = EnlightenGAN()
 
-    G.save_model("./checkpoints/enlightenGAN/", epoch="train")
+    # G.save_model("./checkpoints/enlightenGAN/", epoch="train")

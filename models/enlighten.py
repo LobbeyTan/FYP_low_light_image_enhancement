@@ -13,15 +13,6 @@ from networks.networks import Normalization, WeightInit, initNetWeight
 from networks.source import Unet_resize_conv
 
 
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find('BatchNorm2d') != -1:
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
-
-
 class EnlightenGAN(nn.Module):
 
     def __init__(
@@ -53,7 +44,7 @@ class EnlightenGAN(nn.Module):
         self.G = UnetGenerator().to(self.device)\
             if not use_src else Unet_resize_conv().to(self.device)
 
-        # self.G.apply(weights_init)
+        self.G.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
         if parallelism:
             self.G = torch.nn.DataParallel(self.G, [0])
@@ -62,9 +53,13 @@ class EnlightenGAN(nn.Module):
             3, n_layers=5, normalization=Normalization.none,
         ).to(self.device)
 
+        self.D.apply(lambda m: initNetWeight(m, init_method, init_gain))
+
         self.patch_D = NLayerDiscriminator(
             3, n_layers=4, padw=2, normalization=Normalization.none,
         ).to(self.device)
+
+        self.patch_D.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
         self.criterionGAN = GANLoss().to(self.device)
         self.SFP_loss = SelfFeaturePreservingLoss().to(self.device)

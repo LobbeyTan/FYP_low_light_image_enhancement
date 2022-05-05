@@ -4,3 +4,4 @@ logs/*
 checkpoints/*
 results/*
 datasets/*
+test.ipynb

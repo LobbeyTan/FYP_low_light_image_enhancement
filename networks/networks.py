@@ -100,8 +100,6 @@ class ConvLayer(nn.Module):
 
         self.model = nn.Sequential(*self.layers)
 
-        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
-
     def forward(self, x):
         return self.model(x)
 
@@ -122,8 +120,6 @@ class DeconvLayer(nn.Module):
             self.layers += [getActivationLayer(activation, inplaced, sloped)]
 
         self.model = nn.Sequential(*self.layers)
-
-        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
     def forward(self, x):
         return self.model(x)
@@ -176,8 +172,6 @@ class DownConvBlock(nn.Module):
 
         self.model = nn.Sequential(*self.layers)
 
-        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
-
     def forward(self, x):
         out = self.model(x)
         return out, self.downsampling(out)
@@ -203,8 +197,6 @@ class UpConvBlock(nn.Module):
         self.upsampling = nn.UpsamplingBilinear2d(scale_factor=2)
 
         self.model = nn.Sequential(*self.layers)
-
-        self.model.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
     def forward(self, x, skip_connection):
         _x = self.upsampling(x)
