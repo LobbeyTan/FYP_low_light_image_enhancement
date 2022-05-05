@@ -53,7 +53,7 @@ class EnlightenGAN(nn.Module):
         self.G = UnetGenerator().to(self.device)\
             if not use_src else Unet_resize_conv().to(self.device)
 
-        self.G.apply(weights_init)
+        # self.G.apply(weights_init)
 
         if parallelism:
             self.G = torch.nn.DataParallel(self.G, [0])
