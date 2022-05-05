@@ -188,7 +188,7 @@ class EnlightenGAN(nn.Module):
         self.loss_G_SFP_patch /= float(self.n_patch)
 
         self.total_loss_G = self.loss_G_SFP + \
-            self.loss_G_SFP_patch + self.loss_G + self.loss_G_patch
+            self.loss_G_SFP_patch + self.loss_G + (self.loss_G_patch * 2)
 
         self.total_loss_G.backward()
 
