@@ -188,7 +188,7 @@ class EnlightenGAN(nn.Module):
         self.loss_G_patch /= float(self.n_patch)
         self.loss_G_SFP_patch /= float(self.n_patch)
 
-        self.loss_spa = self.SPA_loss(self.input_A, self.fake_B)
+        self.loss_spa = torch.mean(self.SPA_loss(self.input_A, self.fake_B))
 
         self.total_loss_G = self.loss_G_SFP + \
             self.loss_G_SFP_patch + self.loss_G + self.loss_G_patch + self.loss_spa
