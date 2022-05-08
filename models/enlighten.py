@@ -65,7 +65,7 @@ class EnlightenGAN(nn.Module):
         self.SFP_loss = SelfFeaturePreservingLoss().to(self.device)
         self.SFP_patch_loss = SelfFeaturePreservingLoss().to(self.device)
         self.SPA_loss = L_spa().to(self.device)
-        self.exp_loss = L_exp(16, 0.6).to(self.device)
+        self.exp_loss = L_exp(16, 0.2).to(self.device)
 
         self.optimizer_G = torch.optim.Adam(
             self.G.parameters(), lr=self.lr, betas=(beta1, 0.999)
