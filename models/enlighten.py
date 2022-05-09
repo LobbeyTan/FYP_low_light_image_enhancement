@@ -8,7 +8,7 @@ from torchvision import transforms
 from models.vgg import load_vgg16
 from networks.discriminators import NLayerDiscriminator
 from networks.generators import UnetGenerator
-from networks.loss_functions import GANLoss, L_exp, L_spa, SelfFeaturePreservingLoss
+from networks.loss_functions import GANLoss, L_color, L_exp, L_spa, SelfFeaturePreservingLoss
 from networks.networks import Normalization, WeightInit, initNetWeight
 from networks.source import Unet_resize_conv
 
@@ -65,7 +65,7 @@ class EnlightenGAN(nn.Module):
         self.SFP_loss = SelfFeaturePreservingLoss().to(self.device)
         self.SFP_patch_loss = SelfFeaturePreservingLoss().to(self.device)
         self.SPA_loss = L_spa().to(self.device)
-        self.exp_loss = L_exp(16, 0.2).to(self.device)
+        self.color_loss = L_color().to(self.device)
 
         self.optimizer_G = torch.optim.Adam(
             self.G.parameters(), lr=self.lr, betas=(beta1, 0.999)
@@ -191,10 +191,10 @@ class EnlightenGAN(nn.Module):
 
         self.loss_spa = torch.mean(self.SPA_loss(self.input_A, self.fake_B))
 
-        self.loss_exp = torch.mean(self.exp_loss(self.fake_B)) * 10
+        self.loss_color = 5 * torch.mean(self.color_loss(self.fake_B))
 
         self.total_loss_G = self.loss_G_SFP + self.loss_G_SFP_patch + \
-            self.loss_G + self.loss_G_patch + self.loss_spa + self.loss_exp
+            self.loss_G + self.loss_G_patch + self.loss_spa + self.loss_color
 
         self.total_loss_G.backward()
 
