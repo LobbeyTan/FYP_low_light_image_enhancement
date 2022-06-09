@@ -101,8 +101,6 @@ if __name__ == "__main__":
                 model.save_model(checkpoint_dir, save_freq * n_save)
                 n_save += 1
 
-            break
-
     print(f"Total time taken: {time.time() - train_start_time}")
     print("Saving trained model ...")
 
