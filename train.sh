@@ -1,3 +1,5 @@
+#!/bin/sh
+
 #SBATCH --partition=gpu-v100s
 #SBATCH --job-name=LLIE
 #SBATCH --output=%x.out
