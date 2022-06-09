@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     img_dir = "./datasets/light_enhancement"
     checkpoint_dir = "./checkpoints/enlightenGAN/"
-    batch_size = 1
+    batch_size = 32
     batch_shuffle = True
 
     lr = 0.0001
