@@ -99,6 +99,7 @@ class UnetGenerator(nn.Module):
         x2, x = self.down2(x)
         x3, x = self.down3(x)
         x4, x = self.down4(x)
+        
         x5 = self.conv2(self.conv1(x) * gray5)
 
         x6 = self.up1(x5, x4 * gray4)
