@@ -5,3 +5,4 @@ checkpoints/*
 results/*
 datasets/*
 test.ipynb
+trained_model/

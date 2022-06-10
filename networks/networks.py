@@ -222,3 +222,25 @@ class UnetSkipConnectionBlock(nn.Module):
 
     def forward(self, x):
         return torch.cat([x, self.model(x)], 1)
+
+
+class Attention(nn.Module):
+    def __init__(self):
+        super(Attention, self).__init__()
+        self.U = nn.Linear(256, 256)
+        self.W = nn.Linear(256, 256)
+        self.v = nn.Linear(256, 1)
+        self.tanh = nn.Tanh()
+        self.softmax = nn.Softmax(1)
+
+    def forward(self, img_features, hidden_state):
+        U_h = self.U(hidden_state)
+        W_s = self.W(img_features)
+        att = self.tanh(W_s + U_h)
+        print("Att:", att.shape)
+
+        alpha = self.softmax(att)
+        context = (img_features * alpha)
+        print("Context:", context.shape)
+        print("Alpha:", alpha.shape)
+        return context, alpha

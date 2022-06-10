@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
+from networks.networks import Attention
+
 
 def pad_tensor(input):
 
@@ -185,6 +187,9 @@ class Unet_resize_conv(nn.Module):
         if self.apply_tanh:
             self.tanh = nn.Tanh()
 
+        # My Custom Attention
+        self.att_module = Attention()
+
     def depth_to_space(self, input, block_size):
         block_size_sq = block_size*block_size
         output = input.permute(0, 2, 3, 1)
@@ -270,7 +275,8 @@ class Unet_resize_conv(nn.Module):
             latent = self.conv10(conv9)
 
             if self.times_residual:
-                latent = latent*gray
+                latent, alpha = self.att_module(latent, gray)
+                # latent = latent*gray
 
             # output = self.depth_to_space(conv10, 2)
             if self.apply_tanh:

@@ -5,7 +5,7 @@
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
 #SBATCH --nodes=1
-#SBATCH --ntasks=32
+#SBATCH --ntasks=16
 #SBATCH --mem=85G
 #SBATCH --qos=normal
 #SBATCH --mail-type=ALL

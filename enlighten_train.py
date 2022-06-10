@@ -11,7 +11,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         filemode="w",
         level=logging.INFO,
-        filename="./logs/EnlightenGAN/training_16.log",
+        filename="./logs/EnlightenGAN/training_17.log",
         format="%(asctime)s - [%(levelname)s] - %(message)s",
         datefmt='%H:%M:%S',
     )
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     img_dir = "./datasets/light_enhancement"
     checkpoint_dir = "./checkpoints/enlightenGAN/"
-    batch_size = 32
+    batch_size = 64
     batch_shuffle = True
 
     lr = 0.0001
