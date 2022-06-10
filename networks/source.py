@@ -396,3 +396,181 @@ class Unet_resize_conv(nn.Module):
             return output, latent
         else:
             return output
+
+
+class Unet_resize_conv_with_attention(nn.Module):
+    def __init__(self):
+        super(Unet_resize_conv_with_attention, self).__init__()
+
+        p = 1
+
+        self.downsample_1 = nn.MaxPool2d(2)
+        self.downsample_2 = nn.MaxPool2d(2)
+        self.downsample_3 = nn.MaxPool2d(2)
+        self.downsample_4 = nn.MaxPool2d(2)
+
+        self.attention_4 = Attention(256, 512, 256)
+        self.attention_3 = Attention(128, 256, 256)
+        self.attention_2 = Attention(64, 128, 256)
+        self.attention_1 = Attention(32, 64, 256)
+
+        self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
+        self.LReLU1_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn1_1 = nn.BatchNorm2d(32)
+
+        self.conv1_2 = nn.Conv2d(32, 32, 3, padding=p)
+        self.LReLU1_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn1_2 = nn.BatchNorm2d(32)
+        self.max_pool1 = nn.MaxPool2d(2)
+
+        self.conv2_1 = nn.Conv2d(32, 64, 3, padding=p)
+        self.LReLU2_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn2_1 = nn.BatchNorm2d(64)
+
+        self.conv2_2 = nn.Conv2d(64, 64, 3, padding=p)
+        self.LReLU2_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn2_2 = nn.BatchNorm2d(64)
+        self.max_pool2 = nn.MaxPool2d(2)
+
+        self.conv3_1 = nn.Conv2d(64, 128, 3, padding=p)
+        self.LReLU3_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn3_1 = nn.BatchNorm2d(128)
+
+        self.conv3_2 = nn.Conv2d(128, 128, 3, padding=p)
+        self.LReLU3_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn3_2 = nn.BatchNorm2d(128)
+        self.max_pool3 = nn.MaxPool2d(2)
+
+        self.conv4_1 = nn.Conv2d(128, 256, 3, padding=p)
+        self.LReLU4_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn4_1 = nn.BatchNorm2d(256)
+
+        self.conv4_2 = nn.Conv2d(256, 256, 3, padding=p)
+        self.LReLU4_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn4_2 = nn.BatchNorm2d(256)
+        self.max_pool4 = nn.MaxPool2d(2)
+
+        self.conv5_1 = nn.Conv2d(256, 512, 3, padding=p)
+        self.LReLU5_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn5_1 = nn.BatchNorm2d(512)
+
+        self.conv5_2 = nn.Conv2d(512, 512, 3, padding=p)
+        self.LReLU5_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn5_2 = nn.BatchNorm2d(512)
+
+        self.deconv5 = nn.Conv2d(512, 256, 3, padding=p)
+        self.conv6_1 = nn.Conv2d(512, 256, 3, padding=p)
+        self.LReLU6_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn6_1 = nn.BatchNorm2d(256)
+
+        self.conv6_2 = nn.Conv2d(256, 256, 3, padding=p)
+        self.LReLU6_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn6_2 = nn.BatchNorm2d(256)
+
+        self.deconv6 = nn.Conv2d(256, 128, 3, padding=p)
+        self.conv7_1 = nn.Conv2d(256, 128, 3, padding=p)
+        self.LReLU7_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn7_1 = nn.BatchNorm2d(128)
+
+        self.conv7_2 = nn.Conv2d(128, 128, 3, padding=p)
+        self.LReLU7_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn7_2 = nn.BatchNorm2d(128)
+
+        self.deconv7 = nn.Conv2d(128, 64, 3, padding=p)
+        self.conv8_1 = nn.Conv2d(128, 64, 3, padding=p)
+        self.LReLU8_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn8_1 = nn.BatchNorm2d(64)
+
+        self.conv8_2 = nn.Conv2d(64, 64, 3, padding=p)
+        self.LReLU8_2 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn8_2 = nn.BatchNorm2d(64)
+
+        self.deconv8 = nn.Conv2d(64, 32, 3, padding=p)
+        self.conv9_1 = nn.Conv2d(64, 32, 3, padding=p)
+        self.LReLU9_1 = nn.LeakyReLU(0.2, inplace=True)
+        self.bn9_1 = nn.BatchNorm2d(32)
+
+        self.conv9_2 = nn.Conv2d(32, 32, 3, padding=p)
+        self.LReLU9_2 = nn.LeakyReLU(0.2, inplace=True)
+
+        self.conv10 = nn.Conv2d(32, 3, 1)
+        self.tanh = nn.Tanh()
+
+    def forward(self, input, gray):
+
+        input, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(input)
+        gray, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(gray)
+
+        gray_2 = self.downsample_1(gray)
+        gray_3 = self.downsample_2(gray_2)
+        gray_4 = self.downsample_3(gray_3)
+        gray_5 = self.downsample_4(gray_4)
+
+        x = torch.cat((input, gray), 1)
+
+        x = self.bn1_1(self.LReLU1_1(self.conv1_1(x)))
+        conv1 = self.bn1_2(self.LReLU1_2(self.conv1_2(x)))
+        x = self.max_pool1(conv1)
+
+        x = self.bn2_1(self.LReLU2_1(self.conv2_1(x)))
+        conv2 = self.bn2_2(self.LReLU2_2(self.conv2_2(x)))
+        x = self.max_pool2(conv2)
+
+        x = self.bn3_1(self.LReLU3_1(self.conv3_1(x)))
+        conv3 = self.bn3_2(self.LReLU3_2(self.conv3_2(x)))
+        x = self.max_pool3(conv3)
+
+        x = self.bn4_1(self.LReLU4_1(self.conv4_1(x)))
+        conv4 = self.bn4_2(self.LReLU4_2(self.conv4_2(x)))
+        x = self.max_pool4(conv4)
+
+        x = self.bn5_1(self.LReLU5_1(self.conv5_1(x)))
+        x = x * gray_5
+        conv5 = self.bn5_2(self.LReLU5_2(self.conv5_2(x)))
+
+        conv5 = F.interpolate(conv5, scale_factor=2, mode='bilinear')
+        conv4, alpha4 = self.attention_4(conv4, conv5)  # conv4 * gray_4
+        up6 = torch.cat([self.deconv5(conv5), conv4], 1)
+
+        x = self.bn6_1(self.LReLU6_1(self.conv6_1(up6)))
+        conv6 = self.bn6_2(self.LReLU6_2(self.conv6_2(x)))
+
+        conv6 = F.interpolate(conv6, scale_factor=2, mode='bilinear')
+        conv3, alpha3 = self.attention_3(conv3, conv6)  # conv3 * gray_3
+        up7 = torch.cat([self.deconv6(conv6), conv3], 1)
+
+        x = self.bn7_1(self.LReLU7_1(self.conv7_1(up7)))
+        conv7 = self.bn7_2(self.LReLU7_2(self.conv7_2(x)))
+
+        conv7 = F.interpolate(conv7, scale_factor=2, mode='bilinear')
+        conv2, alpha2 = self.attention_2(conv2, conv7)  # conv2 * gray_2
+        up8 = torch.cat([self.deconv7(conv7), conv2], 1)
+
+        x = self.bn8_1(self.LReLU8_1(self.conv8_1(up8)))
+        conv8 = self.bn8_2(self.LReLU8_2(self.conv8_2(x)))
+
+        conv8 = F.interpolate(conv8, scale_factor=2, mode='bilinear')
+        conv1, alpha1 = self.attention_1(conv1, conv8)  # conv1 * gray
+        up9 = torch.cat([self.deconv8(conv8), conv1], 1)
+
+        x = self.bn9_1(self.LReLU9_1(self.conv9_1(up9)))
+        conv9 = self.LReLU9_2(self.conv9_2(x))
+
+        latent = self.conv10(conv9)
+        latent = latent * gray
+        latent = self.tanh(latent)
+
+        latent = F.relu(latent)
+        output = latent + input
+
+        output = pad_tensor_back(
+            output, pad_left, pad_right, pad_top, pad_bottom
+        )
+
+        latent = pad_tensor_back(
+            latent, pad_left, pad_right, pad_top, pad_bottom
+        )
+
+        gray = pad_tensor_back(gray, pad_left, pad_right, pad_top, pad_bottom)
+
+        return output, latent

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     logging.basicConfig(
         filemode="w",
         level=logging.INFO,
-        filename="./logs/EnlightenGAN/training_17.log",
+        filename="./logs/EnlightenGAN/training_18.log",
         format="%(asctime)s - [%(levelname)s] - %(message)s",
         datefmt='%H:%M:%S',
     )
@@ -24,7 +24,7 @@ if __name__ == "__main__":
     # Configurations
 
     img_dir = "./datasets/light_enhancement"
-    checkpoint_dir = "./checkpoints/enlightenGAN/"
+    checkpoint_dir = "./checkpoints/enlightenGAN/training_18/"
     batch_size = 64
     batch_shuffle = True
 
@@ -52,7 +52,7 @@ if __name__ == "__main__":
     logging.info(f"The number of training images = {dataloader_size}")
 
     # Load model
-    model = EnlightenGAN(use_src=True, lr=lr, device=device)
+    model = EnlightenGAN(use_src=False, lr=lr, device=device)
 
     # Start training
     total_iterations = 0

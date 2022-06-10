@@ -10,7 +10,7 @@ from networks.discriminators import NLayerDiscriminator
 from networks.generators import UnetGenerator
 from networks.loss_functions import GANLoss, L_color, L_exp, L_spa, SelfFeaturePreservingLoss
 from networks.networks import Normalization, WeightInit, initNetWeight
-from networks.source import Unet_resize_conv
+from networks.source import Unet_resize_conv, Unet_resize_conv_with_attention
 
 
 class EnlightenGAN(nn.Module):
@@ -41,7 +41,7 @@ class EnlightenGAN(nn.Module):
         for param in self.vgg.parameters():
             param.requires_grad_(False)
 
-        self.G = UnetGenerator().to(self.device)\
+        self.G = Unet_resize_conv_with_attention().to(self.device)\
             if not use_src else Unet_resize_conv().to(self.device)
 
         self.G.apply(lambda m: initNetWeight(m, init_method, init_gain))

@@ -224,23 +224,78 @@ class UnetSkipConnectionBlock(nn.Module):
         return torch.cat([x, self.model(x)], 1)
 
 
+# class Attention(nn.Module):
+#     def __init__(self):
+#         super(Attention, self).__init__()
+#         self.U = nn.Linear(256, 256)
+#         self.W = nn.Linear(256, 256)
+#         self.v = nn.Linear(256, 1)
+#         self.tanh = nn.Tanh()
+#         self.softmax = nn.Softmax(1)
+
+#     def forward(self, img_features, hidden_state):
+#         U_h = self.U(hidden_state)
+#         W_s = self.W(img_features)
+#         att = self.tanh(W_s + U_h)
+#         print("Att:", att.shape)
+
+#         alpha = self.softmax(att)
+#         context = (img_features * alpha)
+#         print("Context:", context.shape)
+#         print("Alpha:", alpha.shape)
+#         return context, alpha
+
+
 class Attention(nn.Module):
-    def __init__(self):
+    """
+    Attention Network.
+    """
+
+    def __init__(self, encoder_dim, decoder_dim, attention_dim):
+        """
+        :param encoder_dim: feature size of encoded images
+        :param decoder_dim: size of decoder's CNN
+        :param attention_dim: size of the attention network
+        """
         super(Attention, self).__init__()
-        self.U = nn.Linear(256, 256)
-        self.W = nn.Linear(256, 256)
-        self.v = nn.Linear(256, 1)
+        # linear layer to transform encoded image
+        self.encoder_att = nn.Linear(encoder_dim, attention_dim)
+        # linear layer to transform decoder's output
+        self.decoder_att = nn.Linear(decoder_dim, attention_dim)
+        # linear layer to calculate values to be softmax-ed
+        self.full_att = nn.Linear(attention_dim, 1)
+        # Tanh activation function
         self.tanh = nn.Tanh()
-        self.softmax = nn.Softmax(1)
+        # softmax layer to calculate weights
+        self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, img_features, hidden_state):
-        U_h = self.U(hidden_state)
-        W_s = self.W(img_features)
-        att = self.tanh(W_s + U_h)
-        print("Att:", att.shape)
+    def forward(self, encoder_out, decoder_hidden):
+        """
+        Forward propagation.
+        :param encoder_out: encoded images, a tensor of dimension (batch_size, encoder_dim, width, height)
+        :param decoder_hidden: previous decoder output, a tensor of dimension (batch_size, decoder_dim, width, height)
+        :return: attention weighted encoding, weights
+        """
 
+        # (batch_size, width, height, encoder_dim)
+        encoder_out = encoder_out.permute(0, 2, 3, 1)
+        # (batch_size, width, height, decoder_dim)
+        decoder_hidden = decoder_hidden.permute(0, 2, 3, 1)
+
+        # (batch_size, width, height, attention_dim)
+        att1 = self.encoder_att(encoder_out)
+        # (batch_size, width, height, attention_dim)
+        att2 = self.decoder_att(decoder_hidden)
+        # (batch_size, width, height, 1)
+        att = self.full_att(self.tanh(att1 + att2))
+        # (batch_size, width, height, 1)
         alpha = self.softmax(att)
-        context = (img_features * alpha)
-        print("Context:", context.shape)
-        print("Alpha:", alpha.shape)
-        return context, alpha
+
+        # (batch_size, width, height, encoder_dim)
+        encoding = (encoder_out * alpha)
+        # (batch_size, encoder_dim, width, height)
+        encoding = encoding.permute(0, 3, 1, 2)
+        # (batch_size, 1, width, height)
+        alpha = alpha.permute(0, 3, 1, 2)
+
+        return encoding, alpha
