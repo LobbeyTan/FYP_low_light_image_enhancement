@@ -7,3 +7,5 @@ datasets/*
 test.ipynb
 trained_model/
 train.sh
+*.err
+*.out
