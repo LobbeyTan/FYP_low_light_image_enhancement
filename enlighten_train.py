@@ -8,10 +8,12 @@ import torch
 import time
 
 if __name__ == "__main__":
+    nth_exp = 18
+
     logging.basicConfig(
         filemode="w",
         level=logging.INFO,
-        filename="./logs/EnlightenGAN/training_19.log",
+        filename=f"./logs/EnlightenGAN/training_{nth_exp}.log",
         format="%(asctime)s - [%(levelname)s] - %(message)s",
         datefmt='%H:%M:%S',
     )
@@ -24,8 +26,8 @@ if __name__ == "__main__":
     # Configurations
 
     img_dir = "./datasets/light_enhancement"
-    checkpoint_dir = "./checkpoints/enlightenGAN/training_19/"
-    batch_size = 64
+    checkpoint_dir = f"./checkpoints/enlightenGAN/training_{nth_exp}/"
+    batch_size = 32
     batch_shuffle = True
 
     lr = 0.0001
@@ -53,7 +55,7 @@ if __name__ == "__main__":
 
     # Load model
     model = EnlightenGAN(
-        use_src=True, use_custom_attention=True, lr=lr, device=device
+        use_src=False, lr=lr, device=device
     )
 
     # Start training
