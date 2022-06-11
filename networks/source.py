@@ -63,6 +63,7 @@ class Unet_resize_conv(nn.Module):
             linear_add=False,
             latent_threshold=True,
             latent_norm=False,
+            custom_attention=False,
     ):
         super(Unet_resize_conv, self).__init__()
 
@@ -76,6 +77,7 @@ class Unet_resize_conv(nn.Module):
         self.times_residual = times_residual
         self.self_attention = self_attention
         self.latent_threshold = latent_threshold
+        self.custom_attention = custom_attention
 
         p = 1
         # self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
@@ -187,8 +189,8 @@ class Unet_resize_conv(nn.Module):
         if self.apply_tanh:
             self.tanh = nn.Tanh()
 
-        # My Custom Attention
-        self.att_module = Attention()
+        if self.custom_attention:
+            self.att_module = Attention(3, 1, 256)
 
     def depth_to_space(self, input, block_size):
         block_size_sq = block_size*block_size
@@ -275,8 +277,10 @@ class Unet_resize_conv(nn.Module):
             latent = self.conv10(conv9)
 
             if self.times_residual:
-                latent, alpha = self.att_module(latent, gray)
-                # latent = latent*gray
+                if self.custom_attention:
+                    latent, alpha = self.att_module(latent, gray)
+                else:
+                    latent = latent*gray
 
             # output = self.depth_to_space(conv10, 2)
             if self.apply_tanh:
@@ -393,7 +397,10 @@ class Unet_resize_conv(nn.Module):
             output = F.interpolate(output, scale_factor=2, mode='bilinear')
             gray = F.interpolate(gray, scale_factor=2, mode='bilinear')
         if self.skip:
-            return output, latent
+            if self.custom_attention:
+                return output, latent, alpha
+            else:
+                return output, latent
         else:
             return output
 

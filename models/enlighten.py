@@ -27,6 +27,7 @@ class EnlightenGAN(nn.Module):
             device=torch.device("cpu"),
             init_method=WeightInit.normal,
             init_gain=0.02,
+            use_custom_attention=False,
     ) -> None:
         super(EnlightenGAN, self).__init__()
 
@@ -35,6 +36,7 @@ class EnlightenGAN(nn.Module):
         self.n_patch = n_patch
         self.use_ragan = use_ragan
         self.patch_size = patch_size
+        self.use_custom_attention = use_custom_attention
 
         self.vgg = load_vgg16("./models/pretrained/vgg16.weight", self.device)
         self.vgg.eval()
@@ -42,7 +44,7 @@ class EnlightenGAN(nn.Module):
             param.requires_grad_(False)
 
         self.G = Unet_resize_conv_with_attention().to(self.device)\
-            if not use_src else Unet_resize_conv().to(self.device)
+            if not use_src else Unet_resize_conv(custom_attention=self.use_custom_attention).to(self.device)
 
         self.G.apply(lambda m: initNetWeight(m, init_method, init_gain))
 
@@ -87,8 +89,12 @@ class EnlightenGAN(nn.Module):
 
     def forward(self):
 
-        self.fake_B, self.latent_real_A = self.G(
-            self.input_A, self.input_A_gray)
+        if self.use_custom_attention:
+            self.fake_B, self.latent_real_A, self.alpha = self.G(
+                self.input_A, self.input_A_gray)
+        else:
+            self.fake_B, self.latent_real_A = self.G(
+                self.input_A, self.input_A_gray)
 
         h = self.input_A.size(2)
         w = self.input_A.size(3)
@@ -258,9 +264,14 @@ class EnlightenGAN(nn.Module):
 
     def test(self, save_dir: str):
         with torch.no_grad():
-            self.fake_B, self.latent_real_A = self.G(
-                self.input_A, self.input_A_gray
-            )
+            if self.use_custom_attention:
+                self.fake_B, self.latent_real_A, self.alpha = self.G(
+                    self.input_A, self.input_A_gray
+                )
+            else:
+                self.fake_B, self.latent_real_A = self.G(
+                    self.input_A, self.input_A_gray
+                )
             return self.save_result(save_dir)
 
     def save_result(self, save_dir):
@@ -295,6 +306,9 @@ class EnlightenGAN(nn.Module):
 
             save(tensor2im(self.input_B[i].unsqueeze(0)),
                  "Real Y", result_dir)
+
+            if self.use_custom_attention:
+                save(atten2im(self.alpha[i].unsqueeze(0)), "Alpha", result_dir)
 
         return paths
 
