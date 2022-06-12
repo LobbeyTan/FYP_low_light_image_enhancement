@@ -19,7 +19,7 @@ if __name__ == "__main__":
     )
 
     logging.info("====================================================")
-    logging.info(f"Training {nth_exp}", "Retraining multi-layer attentions")
+    logging.info((f"Training {nth_exp}", "Retraining multi-layer attentions"))
     logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
