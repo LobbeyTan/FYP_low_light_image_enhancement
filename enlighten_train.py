@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 20
+    nth_exp = 22
 
     logging.basicConfig(
         filemode="w",
