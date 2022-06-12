@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 18
+    nth_exp = 20
 
     logging.basicConfig(
         filemode="w",
@@ -17,6 +17,10 @@ if __name__ == "__main__":
         format="%(asctime)s - [%(levelname)s] - %(message)s",
         datefmt='%H:%M:%S',
     )
+
+    logging.info("====================================================")
+    logging.info(f"Training {nth_exp}", "Retraining multi-layer attentions")
+    logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
