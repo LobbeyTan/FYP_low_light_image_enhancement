@@ -66,8 +66,8 @@ class EnlightenGAN(nn.Module):
         self.criterionGAN = GANLoss().to(self.device)
         self.SFP_loss = SelfFeaturePreservingLoss().to(self.device)
         self.SFP_patch_loss = SelfFeaturePreservingLoss().to(self.device)
-        self.SPA_loss = L_spa().to(self.device)
-        self.color_loss = L_color().to(self.device)
+        # self.SPA_loss = L_spa().to(self.device)
+        # self.color_loss = L_color().to(self.device)
 
         self.optimizer_G = torch.optim.Adam(
             self.G.parameters(), lr=self.lr, betas=(beta1, 0.999)
@@ -195,12 +195,12 @@ class EnlightenGAN(nn.Module):
         self.loss_G_patch /= float(self.n_patch)
         self.loss_G_SFP_patch /= float(self.n_patch)
 
-        self.loss_spa = torch.mean(self.SPA_loss(self.input_A, self.fake_B))
+        # self.loss_spa = torch.mean(self.SPA_loss(self.input_A, self.fake_B))
 
-        self.loss_color = 5 * torch.mean(self.color_loss(self.fake_B))
+        # self.loss_color = 5 * torch.mean(self.color_loss(self.fake_B))
 
         self.total_loss_G = self.loss_G_SFP + self.loss_G_SFP_patch + \
-            self.loss_G + self.loss_G_patch + self.loss_spa + self.loss_color
+            self.loss_G + self.loss_G_patch # + self.loss_spa + self.loss_color
 
         self.total_loss_G.backward()
 

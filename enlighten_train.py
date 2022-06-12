@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 22
+    nth_exp = 23
 
     logging.basicConfig(
         filemode="w",
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     )
 
     logging.info("====================================================")
-    logging.info((f"Training {nth_exp}", "Retraining multi-layer attentions"))
+    logging.info((f"Training {nth_exp}", "Retraining multi-layer attentions without SPA & Color Loss"))
     logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -93,8 +93,8 @@ if __name__ == "__main__":
                              (print_freq * n_print, epoch_iter))
                 logging.info("Current Time Taken: %07ds | Current Epoch Running Time: %07ds" % (
                     time_taken, time.time() - start_time))
-                logging.info("SPA Loss: %.7f | Color Loss: %.7f" %
-                             (model.loss_spa, model.loss_color))
+                # logging.info("SPA Loss: %.7f | Color Loss: %.7f" %
+                #              (model.loss_spa, model.loss_color))
                 logging.info("RAGAN Loss for Global D: %.7f | Local D: %.7f" %
                              (model.loss_D, model.loss_patch_D))
                 logging.info("RAGAN Loss for Global G: %.7f | Local G: %.7f" %
