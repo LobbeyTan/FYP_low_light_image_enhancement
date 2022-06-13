@@ -251,7 +251,7 @@ class Attention(nn.Module):
     Attention Network.
     """
 
-    def __init__(self, encoder_dim, decoder_dim, attention_dim):
+    def __init__(self, encoder_dim, decoder_dim, intermediate_dim, attention_dim):
         """
         :param encoder_dim: feature size of encoded images
         :param decoder_dim: size of decoder's CNN
@@ -259,11 +259,11 @@ class Attention(nn.Module):
         """
         super(Attention, self).__init__()
         # linear layer to transform encoded image
-        self.encoder_att = nn.Linear(encoder_dim, attention_dim)
+        self.encoder_att = nn.Linear(encoder_dim, intermediate_dim)
         # linear layer to transform decoder's output
-        self.decoder_att = nn.Linear(decoder_dim, attention_dim)
+        self.decoder_att = nn.Linear(decoder_dim, intermediate_dim)
         # linear layer to calculate values to be softmax-ed
-        self.full_att = nn.Linear(attention_dim, 1)
+        self.full_att = nn.Linear(intermediate_dim, attention_dim)
         # Tanh activation function
         self.tanh = nn.Tanh()
         # softmax layer to calculate weights
