@@ -416,11 +416,11 @@ class Unet_resize_conv_with_attention(nn.Module):
         self.downsample_3 = nn.MaxPool2d(2)
         self.downsample_4 = nn.MaxPool2d(2)
 
-        self.attention_4 = Attention(256, 512, 256)
-        self.attention_3 = Attention(128, 256, 256)
-        self.attention_2 = Attention(64, 128, 256)
-        self.attention_1 = Attention(32, 64, 256)
-        self.attention_0 = Attention(3, 4, 256)
+        self.attention_4 = Attention(256, 512, 256) # Original 256 for all
+        self.attention_3 = Attention(128, 256, 128)
+        self.attention_2 = Attention(64, 128, 64)
+        self.attention_1 = Attention(32, 64, 32)
+        self.attention_0 = Attention(3, 4, 3)
 
         self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
         self.LReLU1_1 = nn.LeakyReLU(0.2, inplace=True)
