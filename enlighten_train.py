@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 22
+    nth_exp = 30
 
     logging.basicConfig(
         filemode="w",
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     )
 
     logging.info("====================================================")
-    logging.info((f"Training {nth_exp}", "Retraining multi-layer attentions"))
+    logging.info((f"Training {nth_exp}", "Retraining multi-layer attentions (5-layers)"))
     logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
     lr = 0.0001
 
-    n_epochs = 100
+    n_epochs = 300
     print_freq = 1000
     save_freq = 15000
 
