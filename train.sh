@@ -1,7 +1,7 @@
 #!/bin/sh
 
 #SBATCH --partition=gpu-v100s
-#SBATCH --job-name=LLIE_32
+#SBATCH --job-name=LLIE_33
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
 #SBATCH --nodes=1
