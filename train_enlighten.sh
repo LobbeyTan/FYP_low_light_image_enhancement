@@ -17,4 +17,4 @@ source /home/user/lobbeytan/FYP_low_light_image_enhancement/venv/bin/activate
 
 cd /home/user/lobbeytan/FYP_low_light_image_enhancement/prior_works/enlightenGAN
 
-python script.py
+python script.py --train
