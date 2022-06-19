@@ -40,7 +40,7 @@ if opt.train:
 elif opt.predict:
 	for i in range(1):
 	        os.system("python predict.py \
-	        	--dataroot ../test_dataset \
+	        	--dataroot ../../datasets/light_enhancement \
 	        	--name enlightening \
 	        	--model single \
 	        	--which_direction AtoB \

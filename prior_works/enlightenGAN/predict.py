@@ -1,4 +1,5 @@
 import os
+from statistics import mode
 from options.test_options import TestOptions
 from data.custom_data_loader import CreateDataLoader
 from models.enlightenGAN import EnlightenGAN
@@ -15,7 +16,8 @@ opt.no_flip = True  # no flip
 
 data_loader = CreateDataLoader(opt)
 dataset = data_loader.load_data()
-model = EnlightenGAN(opt)
+model = EnlightenGAN()
+model.initialize(opt)
 visualizer = Visualizer(opt)
 # create website
 web_dir = os.path.join("./ablation/", opt.name, '%s_%s' % (opt.phase, opt.which_epoch))
