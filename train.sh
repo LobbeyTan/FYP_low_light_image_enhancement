@@ -1,12 +1,12 @@
 #!/bin/sh
 
 #SBATCH --partition=gpu-v100s
-#SBATCH --job-name=LLIE_31
+#SBATCH --job-name=LLIE_37
 #SBATCH --output=%x.out
 #SBATCH --error=%x.err
 #SBATCH --nodes=1
 #SBATCH --ntasks=16
-#SBATCH --mem=21G
+#SBATCH --mem=85G
 #SBATCH --qos=normal
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=tancheelam2@gmail.com

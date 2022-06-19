@@ -9,3 +9,4 @@ trained_model/
 train.sh
 *.err
 *.out
+prior_works/enlightenGAN/checkpoints/*

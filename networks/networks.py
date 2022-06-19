@@ -287,7 +287,7 @@ class Attention(nn.Module):
         # (batch_size, width, height, attention_dim)
         att2 = self.decoder_att(decoder_hidden)
         # (batch_size, width, height, 1)
-        att = self.full_att(self.tanh(att1 + att2))
+        att = self.full_att(self.tanh(att1 * att2))
         # (batch_size, width, height, 1)
         alpha = self.softmax(att)
 
