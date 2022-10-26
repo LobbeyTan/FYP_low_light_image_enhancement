@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     img_dir = "./datasets/light_enhancement"
     checkpoint_dir = f"./checkpoints/enlightenGAN/training_{nth_exp}/"
-    batch_size = 32
+    batch_size = 16
     batch_shuffle = True
 
     lr = 0.0001
