@@ -12,6 +12,7 @@ class CustomImageDataset(Dataset):
     def __init__(self, img_dir, opt: Option) -> None:
         super(CustomImageDataset, self).__init__()
 
+        self.opt = opt
         self.dir_A = os.path.join(img_dir, opt.phase + 'A')
         self.dir_B = os.path.join(img_dir, opt.phase + 'B')
 
@@ -51,8 +52,8 @@ class CustomImageDataset(Dataset):
         gray_A = self.getGrayImage(transformed_img_A)
 
         return {
-            'img_A': transformed_img_A,
-            'img_B': transformed_img_B,
+            'img_A': self.getGrayImage(transformed_img_A, is3D=True) if self.opt.grayscale else transformed_img_A,
+            'img_B': self.getGrayImage(transformed_img_B, is3D=True) if self.opt.grayscale else transformed_img_B,
             'gray_A': gray_A,
             'path_A': path_A,
             'path_B': path_B,
@@ -72,7 +73,13 @@ class CustomImageDataset(Dataset):
 
         return images, paths
 
-    def getGrayImage(self, image: torch.Tensor):
+    def getGrayImage(self, image: torch.Tensor, is3D = False):
         r, g, b = image[0] + 1, image[1] + 1, image[2] + 1
         grayscale = 1. - (0.299*r + 0.587*g + 0.114*b) / 2.
-        return torch.unsqueeze(grayscale, dim=0)
+
+        output = torch.unsqueeze(grayscale, dim=0)
+
+        if is3D:
+            output = output.repeat(3, 1, 1)
+
+        return output

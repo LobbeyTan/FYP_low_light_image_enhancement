@@ -4,8 +4,9 @@ from re import S
 
 class Option:
 
-    def __init__(self, root_dir=os.getcwd(), phase="train") -> None:
+    def __init__(self, root_dir=os.getcwd(), phase="train", grayscale=False) -> None:
         self.phase = phase
+        self.grayscale = grayscale
         self.root_dir = root_dir
 
 
