@@ -291,6 +291,8 @@ class EnlightenGAN(nn.Module):
 
             if not os.path.isdir(result_dir):
                 os.makedirs(result_dir)
+                
+            print(self.image_paths[i])
 
             save(tensor2im(self.input_A[i].unsqueeze(0)),
                  "Real X", result_dir)
