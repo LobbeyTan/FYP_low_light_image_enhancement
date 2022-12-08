@@ -52,7 +52,7 @@ class CustomImageDataset(Dataset):
         gray_A = self.getGrayImage(transformed_img_A)
 
         return {
-            'img_A': self.getGrayImage(transformed_img_A, is3D=True) if self.opt.grayscale else transformed_img_A,
+            'img_A': self.getGray3DImage(transformed_img_A) if self.opt.grayscale else transformed_img_A,
             'img_B': transformed_img_B,
             'gray_A': gray_A,
             'path_A': path_A,
@@ -73,13 +73,17 @@ class CustomImageDataset(Dataset):
 
         return images, paths
 
-    def getGrayImage(self, image: torch.Tensor, is3D = False):
+    def getGrayImage(self, image: torch.Tensor):
         r, g, b = image[0] + 1, image[1] + 1, image[2] + 1
         grayscale = 1. - (0.299*r + 0.587*g + 0.114*b) / 2.
+        return torch.unsqueeze(grayscale, dim=0)
+
+    def getGray3DImage(self, image: torch.Tensor):
+        r, g, b = image[0], image[1], image[2]
+        grayscale = 0.299*r + 0.587*g + 0.114*b
 
         output = torch.unsqueeze(grayscale, dim=0)
 
-        if is3D:
-            output = output.repeat(3, 1, 1)
-
+        output = output.repeat(3, 1, 1)
+            
         return output

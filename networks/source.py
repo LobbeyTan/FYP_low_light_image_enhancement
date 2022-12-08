@@ -420,9 +420,9 @@ class Unet_resize_conv_with_attention(nn.Module):
         self.attention_3 = Attention(128, 256, 512)
         self.attention_2 = Attention(64, 128, 512)
         self.attention_1 = Attention(32, 64, 512)
-        self.attention_0 = Attention(3, 3, 512)
+        self.attention_0 = Attention(3, 4, 512)
 
-        self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
+        self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
         self.LReLU1_1 = nn.LeakyReLU(0.2, inplace=True)
         self.bn1_1 = nn.BatchNorm2d(32)
 
@@ -507,16 +507,16 @@ class Unet_resize_conv_with_attention(nn.Module):
     def forward(self, input, gray):
 
         input, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(input)
-        # gray, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(gray)
+        gray, pad_left, pad_right, pad_top, pad_bottom = pad_tensor(gray)
 
-        # gray_2 = self.downsample_1(gray)
-        # gray_3 = self.downsample_2(gray_2)
-        # gray_4 = self.downsample_3(gray_3)
-        # gray_5 = self.downsample_4(gray_4)
+        gray_2 = self.downsample_1(gray)
+        gray_3 = self.downsample_2(gray_2)
+        gray_4 = self.downsample_3(gray_3)
+        gray_5 = self.downsample_4(gray_4)
 
-        # x_in = torch.cat((input, gray), 1)
+        x_in = torch.cat((input, gray), 1)
 
-        x = self.bn1_1(self.LReLU1_1(self.conv1_1(input)))
+        x = self.bn1_1(self.LReLU1_1(self.conv1_1(x_in)))
         conv1 = self.bn1_2(self.LReLU1_2(self.conv1_2(x)))
         x = self.max_pool1(conv1)
 
@@ -533,6 +533,7 @@ class Unet_resize_conv_with_attention(nn.Module):
         x = self.max_pool4(conv4)
 
         x = self.bn5_1(self.LReLU5_1(self.conv5_1(x)))
+        x = x * gray_5
         conv5 = self.bn5_2(self.LReLU5_2(self.conv5_2(x)))
 
         conv5 = F.interpolate(conv5, scale_factor=2, mode='bilinear')
@@ -564,7 +565,7 @@ class Unet_resize_conv_with_attention(nn.Module):
         conv9 = self.LReLU9_2(self.conv9_2(x))
 
         latent = self.conv10(conv9)
-        latent, alpha = self.attention_0(latent, input) # latent * gray
+        latent, alpha = self.attention_0(latent, x_in) # latent * gray
         latent = self.tanh(latent)
 
         latent = F.relu(latent)
