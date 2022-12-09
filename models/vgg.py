@@ -110,6 +110,8 @@ def vgg_preprocess(batch, vgg_mean=False):
     
     if batch.shape[1] == 1:
         batch = batch.repeat(1, 3, 1, 1)
+        batch = (batch + 1) * 255 * 0.5  # [-1, 1] -> [0, 255]
+        return batch
 
     (r, g, b) = torch.chunk(batch, 3, dim=1)
     batch = torch.cat((b, g, r), dim=1)  # convert RGB to BGR
