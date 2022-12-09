@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 48
+    nth_exp = 49
 
     logging.basicConfig(
         filemode="w",
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     )
 
     logging.info("====================================================")
-    logging.info((f"Training {nth_exp}", "Grayscale low light image enhancement using source"))
+    logging.info((f"Training {nth_exp}", "Grayscale low light image enhancement using source and 1D input"))
     logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

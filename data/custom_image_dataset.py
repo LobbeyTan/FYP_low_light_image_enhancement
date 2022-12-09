@@ -84,6 +84,6 @@ class CustomImageDataset(Dataset):
 
         output = torch.unsqueeze(grayscale, dim=0)
 
-        output = output.repeat(3, 1, 1)
+        # output = output.repeat(3, 1, 1)
             
         return output

@@ -82,14 +82,14 @@ class Unet_resize_conv(nn.Module):
         p = 1
         # self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
         if self.self_attention:
-            self.conv1_1 = nn.Conv2d(4, 32, 3, padding=p)
+            self.conv1_1 = nn.Conv2d(2, 32, 3, padding=p)
             # self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
             self.downsample_1 = nn.MaxPool2d(2)
             self.downsample_2 = nn.MaxPool2d(2)
             self.downsample_3 = nn.MaxPool2d(2)
             self.downsample_4 = nn.MaxPool2d(2)
         else:
-            self.conv1_1 = nn.Conv2d(3, 32, 3, padding=p)
+            self.conv1_1 = nn.Conv2d(1, 32, 3, padding=p)
         self.LReLU1_1 = nn.LeakyReLU(0.2, inplace=True)
         if self.use_norm == 1:
             self.bn1_1 = nn.BatchNorm2d(32)
