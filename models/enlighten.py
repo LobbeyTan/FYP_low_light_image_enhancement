@@ -83,6 +83,7 @@ class EnlightenGAN(nn.Module):
 
     def set_input(self, batch_data):
         self.input_A = batch_data['img_A'].to(self.device)
+        self.input_A_star = batch_data['img_A*'].to(self.device)
         self.input_A_gray = batch_data['gray_A'].to(self.device)
         self.input_B = batch_data['img_B'].to(self.device)
         self.image_paths = batch_data['path_A']
@@ -118,7 +119,7 @@ class EnlightenGAN(nn.Module):
             )
 
             self.source_patch.append(
-                self.input_A[:, :, h_offset: (h_offset+self.patch_size),
+                self.input_A_star[:, :, h_offset: (h_offset+self.patch_size),
                              w_offset: (w_offset + self.patch_size)]
             )
 
@@ -170,7 +171,7 @@ class EnlightenGAN(nn.Module):
         else:
             self.loss_G = self.criterionGAN(self.D(self.fake_B), True)
 
-        self.loss_G_SFP = self.SFP_loss(self.vgg, self.fake_B, self.input_A)
+        self.loss_G_SFP = self.SFP_loss(self.vgg, self.fake_B, self.input_A_star)
 
         self.loss_G_patch = 0
 

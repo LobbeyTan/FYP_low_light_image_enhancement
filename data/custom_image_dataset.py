@@ -53,6 +53,7 @@ class CustomImageDataset(Dataset):
 
         return {
             'img_A': self.getGray3DImage(transformed_img_A) if self.opt.grayscale else transformed_img_A,
+            'img_A*': transformed_img_A,
             'img_B': transformed_img_B,
             'gray_A': gray_A,
             'path_A': path_A,
