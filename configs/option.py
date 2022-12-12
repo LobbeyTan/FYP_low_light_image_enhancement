@@ -4,10 +4,12 @@ from re import S
 
 class Option:
 
-    def __init__(self, root_dir=os.getcwd(), phase="train", grayscale=False) -> None:
+    def __init__(self, root_dir=os.getcwd(), phase="train", grayscale=False, dir_A=None, dir_B=None) -> None:
         self.phase = phase
         self.grayscale = grayscale
         self.root_dir = root_dir
+        self.dir_A = dir_A
+        self.dir_B = dir_B
 
 
 class BaseOptions():

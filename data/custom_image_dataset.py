@@ -13,8 +13,8 @@ class CustomImageDataset(Dataset):
         super(CustomImageDataset, self).__init__()
 
         self.opt = opt
-        self.dir_A = os.path.join(img_dir, opt.phase + 'A')
-        self.dir_B = os.path.join(img_dir, opt.phase + 'B')
+        self.dir_A = os.path.join(img_dir, opt.phase + 'A' if opt.dir_A is None else opt.dir_A)
+        self.dir_B = os.path.join(img_dir, opt.phase + 'B' if opt.dir_B is None else opt.dir_B)
 
         self.imgs_A, self.paths_A = self.extractImages(self.dir_A)
         self.imgs_B, self.paths_B = self.extractImages(self.dir_B)
@@ -26,7 +26,7 @@ class CustomImageDataset(Dataset):
             [
                 transforms.Resize(
                     size=286, interpolation=transforms.InterpolationMode.BICUBIC),
-                transforms.RandomCrop(size=256),
+                transforms.RandomCrop(size=256) if self.opt.phase == "train" else transforms.CenterCrop(size=256),
                 transforms.ToTensor(),
                 transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
