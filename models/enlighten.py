@@ -11,6 +11,7 @@ from networks.generators import UnetGenerator
 from networks.loss_functions import GANLoss, L_color, L_exp, L_spa, SelfFeaturePreservingLoss
 from networks.networks import Normalization, WeightInit, initNetWeight
 from networks.source import Unet_resize_conv, Unet_resize_conv_with_attention
+from time import time
 
 
 class EnlightenGAN(nn.Module):
@@ -264,7 +265,9 @@ class EnlightenGAN(nn.Module):
         self.patch_D.eval()
 
     def test(self, save_dir: str):
+        self.running_time = 0
         with torch.no_grad():
+            start = time()
             if self.use_custom_attention:
                 self.fake_B, self.latent_real_A, self.alpha = self.G(
                     self.input_A, self.input_A_gray
@@ -273,6 +276,9 @@ class EnlightenGAN(nn.Module):
                 self.fake_B, self.latent_real_A = self.G(
                     self.input_A, self.input_A_gray
                 )
+            
+            end = time()
+            self.running_time = end - start
             return self.save_result(save_dir)
 
     def save_result(self, save_dir):
@@ -309,6 +315,9 @@ class EnlightenGAN(nn.Module):
 
             save(tensor2im(self.input_B[i].unsqueeze(0)),
                  "Real Y", result_dir)
+            
+            # save(tensor2im(self.fake_B[i].unsqueeze(0)),
+            #      self.image_paths[i].split("\\")[-1].split(".")[0], save_dir)
 
             if self.use_custom_attention:
                 save(atten2im(self.alpha[i].unsqueeze(0)), "Alpha", result_dir)
