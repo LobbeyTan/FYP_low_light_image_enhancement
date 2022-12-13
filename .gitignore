@@ -5,6 +5,7 @@ checkpoints/*
 results/*
 datasets/*
 test.ipynb
+test.py
 trained_model/
 train.sh
 *.err
