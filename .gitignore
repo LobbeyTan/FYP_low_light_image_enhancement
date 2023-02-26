@@ -7,6 +7,7 @@ datasets/*
 test.ipynb
 test.py
 trained_model/
+test/*
 train.sh
 *.err
 *.out
