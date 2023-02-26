@@ -8,7 +8,7 @@ import torch
 import time
 
 if __name__ == "__main__":
-    nth_exp = 56
+    nth_exp = 60
 
     logging.basicConfig(
         filemode="w",
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     )
 
     logging.info("====================================================")
-    logging.info((f"Training {nth_exp}", "Grayscale low light image enhancement using source and 1D input"))
+    logging.info((f"Training {nth_exp}", "Grayscale low light image enhancement using turbid"))
     logging.info("====================================================")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     # Configurations
 
-    img_dir = "./datasets/light_enhancement"
+    img_dir = "./datasets/turbid"
     checkpoint_dir = f"./checkpoints/enlightenGAN/training_{nth_exp}/"
     batch_size = 16
     batch_shuffle = True
